@@ -4,7 +4,15 @@
 
 Скрипт читает адрес страницы, находит его в таблицах адресов, подсвечивает активные табы и проставляет ссылки остальным. На тематических страницах и страницах пород табы размера и возраста не выводятся: там фильтрует сама Tilda.
 
-## Подключение в Tilda
+## Тест на одной странице
+Ничего не вставляйте в HEAD. На скрытой тестовой странице (копии страницы каталога) поставьте блок T123:
+```html
+<div id="pc-catnav" data-path="/catalog/krupnieporodi/puppies"></div>
+<script src="https://cdn.jsdelivr.net/gh/mirowdav/petchef@main/catnav.js"></script>
+```
+`data-path` — адрес, которым скрипт «притворяется». Меняйте его, чтобы проверить разные страницы: `/catalog/adults`, `/catalog/korm-bezzernovoi`, `/catalog/labrador`, `/catalog/korm-dlya-koshek`.
+
+## Подключение на весь сайт
 1. **Настройки сайта → Ещё → HTML-код для вставки внутрь HEAD**:
    ```html
    <script src="https://cdn.jsdelivr.net/gh/mirowdav/petchef@main/catnav.js" defer></script>

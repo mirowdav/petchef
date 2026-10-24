@@ -119,7 +119,7 @@
 
     // Собаки / Кошки — ведём на страницу-пару
     function animalHref(target) {
-      if (target === a) return location.pathname;
+      if (target === a) return '#';
       if (page.kind === 'theme') {
         var t = THEMES.filter(function (x) { return x.key === page.theme; })[0];
         if (t && t[target]) return t[target];
@@ -180,7 +180,8 @@
   function init() {
     var root = document.getElementById('pc-catnav');
     if (!root) return;
-    var page = detect(norm(location.pathname));
+    // data-path — тест на скрытой странице: скрипт ведёт себя так, будто открыт этот адрес
+    var page = detect(norm(root.getAttribute('data-path') || location.pathname));
     if (!page) { root.style.display = 'none'; return; } // адреса нет в таблицах
     render(root, page);
   }
