@@ -34,20 +34,24 @@
   };
 
   // животное → размер → возраст → адрес
+  // ВРЕМЕННО: по ТЗ нужны страницы без типа корма (/catalog/korm-dlya-sobak,
+  // /catalog/<размер>/adults и /puppies). Пока их нет, ссылки ведут на существующие:
+  // «Все породы · Любой возраст» → общий /catalog, «размер × возраст» → страницы СУ-ВИД
+  // (на страницах /barf/... — на соответствующие BARF, см. sameType).
   var GRID = {
     dog: {
-      all:    { any: '/catalog/korm-dlya-sobak',          // НОВАЯ
+      all:    { any: '/catalog',
                 adult: '/catalog/adults',
                 young: '/catalog/puppies' },
       small:  { any: '/catalog/melkieporodi',
-                adult: '/catalog/melkieporodi/adults',    // НОВАЯ
-                young: '/catalog/melkieporodi/puppies' }, // НОВАЯ
+                adult: '/suvid/melkieporodi/adults',
+                young: '/suvid/melkieporodi/puppies' },
       medium: { any: '/catalog/srednieporodi',
-                adult: '/catalog/srednieporodi/adults',   // НОВАЯ
-                young: '/catalog/srednieporodi/puppies' },// НОВАЯ
+                adult: '/suvid/srednieporodi/adults',
+                young: '/suvid/srednieporodi/puppies' },
       large:  { any: '/catalog/krupnieporodi',
-                adult: '/catalog/krupnieporodi/adults',   // НОВАЯ
-                young: '/catalog/krupnieporodi/puppies' } // НОВАЯ
+                adult: '/suvid/krupnieporodi/adults',
+                young: '/suvid/krupnieporodi/puppies' }
     },
     cat: {
       all:    { any: '/catalog/korm-dlya-koshek',
@@ -60,7 +64,7 @@
   var THEMES = [
     { key: 'grainfree', title: 'Беззерновой',
       dog: '/catalog/korm-bezzernovoi',
-      cat: '/catalog/korm-bezzernovoi-dlya-koshek' },                // НОВАЯ
+      cat: null },  // по ТЗ нужна, но страницы нет — карточка у кошек скрыта
     { key: 'castrated', title: 'Для кастрированных',
       dog: '/catalog/korm-dlya-kastrirovannix-sobak',
       cat: '/catalog/korm_dly_kastrirovannyh_kotov' },
@@ -83,8 +87,11 @@
           '/catalog/sfinks', '/catalog/vislouxie']
   };
 
-  // Старые страницы: на них тоже показываем навигацию, табы ведут в новую структуру
-  var LEGACY = {};
+  // Остальные страницы, которые тоже надо узнавать по адресу
+  var LEGACY = {
+    '/catalog/suvid-dlya-koshek': { animal: 'cat', size: 'all', age: 'any' },
+    '/catalog/barf-dlya-koshek':  { animal: 'cat', size: 'all', age: 'any' }
+  };
   ['suvid', 'barf'].forEach(function (type) {
     [['melkieporodi', 'small'], ['srednieporodi', 'medium'], ['krupnieporodi', 'large']].forEach(function (s) {
       var base = '/' + type + '/' + s[0];
@@ -129,6 +136,11 @@
   function render(root, page) {
     var a = page.animal, other = a === 'dog' ? 'cat' : 'dog', html = '';
 
+    // На страницах /barf/... табы «размер × возраст» ведут на BARF, а не на СУ-ВИД
+    function sameType(href) {
+      return page.type === 'barf' ? href.replace(/^\/suvid\//, '/barf/') : href;
+    }
+
     // Собаки / Кошки — ведём на страницу-пару
     function animalHref(target) {
       if (target === a) return '#';
@@ -154,14 +166,14 @@
           var row = GRID[a][s.key];
           if (!row) return;
           // тот же возраст, другой размер; если такой страницы нет — «любой возраст»
-          html += link(row[page.age] || row.any, label(s), s.key === page.size);
+          html += link(sameType(row[page.age] || row.any), label(s), s.key === page.size);
         });
         html += '</div></div>';
       }
       html += '<div class="pc-group"><div class="pc-label">Возраст</div><div class="pc-seg">';
       AGES[a].forEach(function (g) {
         var href = GRID[a][page.size][g.key];
-        if (href) html += link(href, label(g), g.key === page.age);
+        if (href) html += link(sameType(href), label(g), g.key === page.age);
       });
       html += '</div></div></div>';
     }
@@ -195,6 +207,7 @@
     // data-path — тест на скрытой странице: скрипт ведёт себя так, будто открыт этот адрес
     var page = detect(norm(root.getAttribute('data-path') || location.pathname));
     if (!page) { root.style.display = 'none'; return; } // адреса нет в таблицах
+    if (/^\/barf\//.test(norm(root.getAttribute('data-path') || location.pathname))) page.type = 'barf';
     render(root, page);
   }
 
