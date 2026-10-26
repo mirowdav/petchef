@@ -87,6 +87,9 @@
           '/catalog/sfinks', '/catalog/vislouxie']
   };
 
+  // Размер → часть адреса на страницах /suvid/... и /barf/...
+  var TYPE_SIZES = { small: 'melkieporodi', medium: 'srednieporodi', large: 'krupnieporodi' };
+
   // Остальные страницы, которые тоже надо узнавать по адресу
   var LEGACY = {
     '/catalog/suvid-dlya-koshek': { animal: 'cat', size: 'all', age: 'any' },
@@ -136,9 +139,16 @@
   function render(root, page) {
     var a = page.animal, other = a === 'dog' ? 'cat' : 'dog', html = '';
 
-    // На страницах /barf/... табы «размер × возраст» ведут на BARF, а не на СУ-ВИД
-    function sameType(href) {
-      return page.type === 'barf' ? href.replace(/^\/suvid\//, '/barf/') : href;
+    // На страницах /suvid/... и /barf/... остаёмся в своём типе корма:
+    // размер и возраст ведут на /<тип>/<размер>[/adults|/puppies].
+    // «Все породы» своей страницы у типа нет — туда ведём по общей таблице.
+    function nav(size, age) {
+      if (page.type && TYPE_SIZES[size]) {
+        return '/' + page.type + '/' + TYPE_SIZES[size] +
+          (age === 'adult' ? '/adults' : age === 'young' ? '/puppies' : '');
+      }
+      var row = GRID[a][size];
+      return row && (row[age] || row.any);
     }
 
     // Собаки / Кошки — ведём на страницу-пару
@@ -163,17 +173,16 @@
       if (a === 'dog') {
         html += '<div class="pc-group pc-group--size"><div class="pc-label">Размер собаки</div><div class="pc-seg">';
         SIZES.forEach(function (s) {
-          var row = GRID[a][s.key];
-          if (!row) return;
           // тот же возраст, другой размер; если такой страницы нет — «любой возраст»
-          html += link(sameType(row[page.age] || row.any), label(s), s.key === page.size);
+          var href = nav(s.key, page.age);
+          if (href) html += link(href, label(s), s.key === page.size);
         });
         html += '</div></div>';
       }
       html += '<div class="pc-group"><div class="pc-label">Возраст</div><div class="pc-seg">';
       AGES[a].forEach(function (g) {
-        var href = GRID[a][page.size][g.key];
-        if (href) html += link(sameType(href), label(g), g.key === page.age);
+        var href = GRID[a][page.size][g.key] && nav(page.size, g.key);
+        if (href) html += link(href, label(g), g.key === page.age);
       });
       html += '</div></div></div>';
     }
@@ -207,7 +216,8 @@
     // data-path — тест на скрытой странице: скрипт ведёт себя так, будто открыт этот адрес
     var page = detect(norm(root.getAttribute('data-path') || location.pathname));
     if (!page) { root.style.display = 'none'; return; } // адреса нет в таблицах
-    if (/^\/barf\//.test(norm(root.getAttribute('data-path') || location.pathname))) page.type = 'barf';
+    var m = norm(root.getAttribute('data-path') || location.pathname).match(/^\/(suvid|barf)\//);
+    if (m) page.type = m[1];
     render(root, page);
   }
 
