@@ -83,6 +83,17 @@
           '/catalog/sfinks', '/catalog/vislouxie']
   };
 
+  // Старые страницы: на них тоже показываем навигацию, табы ведут в новую структуру
+  var LEGACY = {};
+  ['suvid', 'barf'].forEach(function (type) {
+    [['melkieporodi', 'small'], ['srednieporodi', 'medium'], ['krupnieporodi', 'large']].forEach(function (s) {
+      var base = '/' + type + '/' + s[0];
+      LEGACY[base] = { animal: 'dog', size: s[1], age: 'any' };
+      LEGACY[base + '/adults'] = { animal: 'dog', size: s[1], age: 'adult' };
+      LEGACY[base + '/puppies'] = { animal: 'dog', size: s[1], age: 'young' };
+    });
+  });
+
   // Перенести родной фильтр Tilda (тип рациона, вкус) внутрь панели.
   // Класс внутренний — проверьте на тестовой странице. null = не переносить.
   var TILDA_FILTER_SELECTOR = '.t-store__filter';
@@ -99,6 +110,7 @@
     var a, s, g;
     for (a in GRID) for (s in GRID[a]) for (g in GRID[a][s])
       if (norm(GRID[a][s][g]) === path) return { kind: 'grid', animal: a, size: s, age: g };
+    if (LEGACY[path]) return { kind: 'grid', animal: LEGACY[path].animal, size: LEGACY[path].size, age: LEGACY[path].age };
     for (var i = 0; i < THEMES.length; i++)
       for (a in { dog: 1, cat: 1 })
         if (THEMES[i][a] && norm(THEMES[i][a]) === path) return { kind: 'theme', animal: a, theme: THEMES[i].key };
